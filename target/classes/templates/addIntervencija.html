@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unos Intervencije</title>
+</head>
+<body>
+<h1>Unos Intervencije</h1>
+<form id="interventionForm">
+    <input type="hidden" id="taskId" th:value="${taskId}">
+    <label for="opisIntervencije">Opis Intervencije:</label>
+    <input type="text" id="opisIntervencije" name="opisIntervencije" required><br><br>
+    <button type="button" onclick="submitForm()">Potvrdi</button>
+</form>
+
+<script>
+    function submitForm() {
+        var form = document.getElementById("interventionForm");
+        var formData = new FormData(form);
+        var xhr = new XMLHttpRequest();
+        var taskId = document.getElementById("taskId").value;
+        xhr.open("POST", "http://localhost:8080/engine-rest/task/" + taskId + "/complete", true);
+
+        xhr.setRequestHeader("Content-Type", "application/json");
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200) {
+                console.log(xhr.responseText);
+            }                window.location.href = "/tasks/" + taskId;
+
+        };
+        var json = {"variables": {}};
+        formData.forEach(function (value, key) {
+            json["variables"][key] = {"value": value};
+        });
+        console.log(JSON.stringify(json));
+        xhr.send(JSON.stringify(json));
+    }
+</script>
+
+</body>
+</html>

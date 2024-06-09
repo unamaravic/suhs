@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Dispeceri View</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+</head>
+<body>
+<div class="container mt-5">
+    <h1 class="mb-4">Dispeceri View</h1>
+
+    <!-- Prva tablica -->
+    <h2 class="mb-3">Prva Tablica</h2>
+    <table class="table table-bordered table-hover">
+        <thead class="thead-dark">
+        <tr>
+            <th>PID</th>
+            <th>Date/Time</th>
+            <th>Adresa</th>
+            <th>Opis</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="task : ${tasks1}">
+            <td th:text="${task.pid}"></td>
+            <td th:text="${task.dateTime}"></td>
+            <td>
+                <a th:if="${!task.addressCompleted}" th:href="@{'/completeAddress/' + ${task.pid}}" class="btn btn-primary btn-sm">Unesi adresu</a>
+                <span th:if="${task.addressCompleted}" th:text="${task.address}"></span>
+            </td>
+            <td>
+                <a th:if="${task.addressCompleted && !task.descriptionCompleted}" th:href="@{'/completeDescription/' + ${task.pid}}" class="btn btn-secondary btn-sm" th:disabled="${!task.addressCompleted}">Unesi opis</a>
+                <span th:if="${task.descriptionCompleted}" th:text="${task.description}"></span>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+
+    <!-- Druga tablica -->
+    <h2 class="mb-3">Druga Tablica</h2>
+    <table class="table table-bordered table-hover">
+        <thead class="thead-dark">
+        <tr>
+            <th>PID</th>
+            <th>Date</th>
+            <th>Adresa</th>
+            <th>Opis</th>
+            <th>VoziloID</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="task : ${tasks2}">
+            <td th:text="${task.pid}"></td>
+            <td th:text="${task.date}"></td>
+            <td th:text="${task.address}"></td>
+            <td th:text="${task.description}"></td>
+            <td th:text="${task.voziloId != null ? task.voziloId : ''}"></td>
+        </tr>
+        </tbody>
+    </table>
+
+    <!-- Treća tablica -->
+    <h2 class="mb-3">Treća Tablica</h2>
+    <table class="table table-bordered table-hover">
+        <thead class="thead-dark">
+        <tr>
+            <th>PID</th>
+            <th>Date</th>
+            <th>Izaberi korisnika za popunjavanje izvještaja</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="task : ${tasks3}">
+            <td th:text="${task.pid}"></td>
+            <td th:text="${task.date}"></td>
+            <td>
+                <a th:href="@{'/selectUserForReport/' + ${task.pid}}" class="btn btn-primary btn-sm">Izaberi korisnika</a>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+</body>
+</html>

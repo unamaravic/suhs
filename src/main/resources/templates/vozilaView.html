@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Vozila</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+</head>
+<body>
+<div class="container mt-5">
+    <h1 class="mb-4">Vozila - Procesi koji čekaju poruku</h1>
+    <form id="addressForm">
+        <input type="hidden" id="username" th:value="${username}">
+    </form>
+    <table class="table table-bordered table-hover">
+        <thead class="thead-dark">
+        <tr>
+            <th>PID</th>
+            <th>Opis intervencije</th>
+            <th>Javi se za intervenciju</th>
+        </tr>
+        </thead>
+        <tbody id="table-body">
+        </tbody>
+    </table>
+    <div class="container mt-5">
+        <h2 class="mb-3">BPMN Dijagram</h2>
+        <img th:src="@{http://localhost:8080/images/intervencija.png}" alt="model" style="max-width: 100%; height: auto;">
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        function loadProcesses() {
+            var xhr = new XMLHttpRequest();
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState === 4 && xhr.status === 200) {
+                    var processes = JSON.parse(xhr.responseText);
+                    var tableBody = document.getElementById('table-body');
+                    tableBody.innerHTML = ''; // Očisti sadržaj tablice
+
+                    processes.forEach(function(process) {
+                        var processId = process.id;
+                        var variablesUrlOpis = `http://localhost:8080/engine-rest/process-instance/${processId}/variables/opisIntervencije`;
+                        var variablesUrlVozilo = `http://localhost:8080/engine-rest/process-instance/${processId}/variables/vozilo`;
+
+                        // Dohvati varijablu opisIntervencije
+                        var xhrOpis = new XMLHttpRequest();
+                        xhrOpis.onreadystatechange = function() {
+                            if (xhrOpis.readyState === 4 && xhrOpis.status === 200) {
+                                var opisIntervencije = JSON.parse(xhrOpis.responseText);
+                                if (opisIntervencije) {
+                                    // Ako opisIntervencije postoji, provjeri postoji li vozilo
+                                    var xhrVozilo = new XMLHttpRequest();
+                                    xhrVozilo.onreadystatechange = function() {
+                                        if (xhrVozilo.readyState === 4 && xhrVozilo.status === 200) {
+                                            var vozilo = JSON.parse(xhrVozilo.responseText);
+                                            // Ako vozilo ne postoji, dodaj u tablicu
+                                            if (!vozilo) {
+                                                var row = document.createElement('tr');
+
+                                                var pidCell = document.createElement('td');
+                                                pidCell.textContent = process.id;
+                                                row.appendChild(pidCell);
+
+                                                var descriptionCell = document.createElement('td');
+                                                descriptionCell.textContent = opisIntervencije.value;
+                                                row.appendChild(descriptionCell);
+
+                                                var buttonCell = document.createElement('td');
+                                                var button = document.createElement('button');
+                                                button.textContent = 'Javi se za intervenciju';
+                                                button.className = 'btn btn-primary btn-sm';
+                                                button.onclick = function() {
+                                                    sendMessage(process.id);
+                                                };
+                                                buttonCell.appendChild(button);
+                                                row.appendChild(buttonCell);
+
+                                                tableBody.appendChild(row);
+                                            }
+                                        } else if (xhrVozilo.readyState === 4 && xhrVozilo.status === 404) {
+                                            // Ako vozilo ne postoji (status 404), dodaj u tablicu
+                                            var row = document.createElement('tr');
+
+                                            var pidCell = document.createElement('td');
+                                            pidCell.textContent = process.id;
+                                            row.appendChild(pidCell);
+
+                                            var descriptionCell = document.createElement('td');
+                                            descriptionCell.textContent = opisIntervencije.value;
+                                            row.appendChild(descriptionCell);
+
+                                            var buttonCell = document.createElement('td');
+                                            var button = document.createElement('button');
+                                            button.textContent = 'Javi se za intervenciju';
+                                            button.className = 'btn btn-primary btn-sm';
+                                            button.onclick = function() {
+                                                sendMessage(process.id);
+                                            };
+                                            buttonCell.appendChild(button);
+                                            row.appendChild(buttonCell);
+
+                                            tableBody.appendChild(row);
+                                        }
+                                    };
+
+                                    xhrVozilo.open('GET', variablesUrlVozilo, true);
+                                    xhrVozilo.send();
+                                }
+                            } else if (xhrOpis.readyState === 4) {
+                                console.error('Greška prilikom dohvaćanja varijable opisIntervencije:', xhrOpis.status);
+                            }
+                        };
+
+                        xhrOpis.open('GET', variablesUrlOpis, true);
+                        xhrOpis.send();
+                    });
+                } else if (xhr.readyState === 4) {
+                    console.error('Greška prilikom dohvaćanja procesa:', xhr.status);
+                }
+            };
+
+            xhr.open('GET', 'http://localhost:8080/engine-rest/process-instance', true);
+            xhr.send();
+        }
+
+        function sendMessage(processId) {
+            var username = document.getElementById("username").value;
+            var xhr = new XMLHttpRequest();
+            var url = 'http://localhost:8080/engine-rest/process-instance/message-async';
+            var payload = {
+                "messageName": "JavljanjeVozila",
+                "processInstanceIds": [processId],
+                "variables": {
+                    "vozilo": {
+                        "value": username
+                    }
+                }
+            };
+
+            payload = JSON.stringify(payload);
+
+            xhr.open('POST', url, true);
+            xhr.setRequestHeader('Content-Type', 'application/json');
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState === 4 && xhr.status === 204) {
+                    console.log('Poruka poslana za proces s ID: ' + processId);
+                } else if (xhr.readyState === 4) {
+                    console.error('Greška prilikom slanja poruke:', xhr.status, xhr.statusText);
+                }
+            };
+            xhr.send(payload);
+        }
+
+        // Učitaj procese odmah po učitavanju stranice
+        loadProcesses();
+
+        // Možeš postaviti interval za periodično osvježavanje podataka
+        setInterval(function() {
+            loadProcesses();
+        }, 60000); // Osvježi svakih 60 sekundi
+    });
+</script>
+</body>
+</html>

@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Član hitne službe</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+</head>
+<body>
+<div class="container mt-5">
+    <h1 class="mb-4">Član hitne službe</h1>
+
+    <!-- Tablica s intervencijama koje čekaju izvještaj -->
+    <h2 class="mb-3">Intervencije koje čekaju izvještaj</h2>
+    <table class="table table-bordered table-hover">
+        <thead class="thead-dark">
+        <tr>
+            <th>PID</th>
+            <th>Date</th>
+            <th>Opis intervencije</th>
+            <th>Vozilo</th>
+            <th>Akcija</th>
+        </tr>
+        </thead>
+        <tbody id="table1-body">
+        <!-- Ovdje će se dinamički generirati redovi tablice -->
+        </tbody>
+    </table>
+
+    <!-- Tablica s zadacima od dispečera -->
+    <h2 class="mb-3">Zadaci od dispečera</h2>
+    <table class="table table-bordered table-hover">
+        <thead class="thead-dark">
+        <tr>
+            <th>PID</th>
+            <th>Date</th>
+            <th>Opis intervencije</th>
+            <th>Vozilo</th>
+            <th>Akcija</th>
+        </tr>
+        </thead>
+        <tbody id="table2-body">
+        <!-- Ovdje će se dinamički generirati redovi tablice -->
+        </tbody>
+    </table>
+
+    <div class="container mt-5">
+        <h2 class="mb-3">BPMN Dijagram</h2>
+        <img th:src="@{http://localhost:8080/images/intervencija.png}" alt="model" style="max-width: 100%; height: auto;">
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Funkcija za dohvat intervencija koje čekaju izvještaj
+        function loadTasksWaitingForReport() {
+            var xhr = new XMLHttpRequest();
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState === 4 && xhr.status === 200) {
+                    var processInstances = JSON.parse(xhr.responseText);
+                    var tableBody = document.getElementById('table1-body');
+                    tableBody.innerHTML = ''; // Očisti sadržaj tablice
+
+                    processInstances.forEach(function (processInstance) {
+                        var processInstanceId = processInstance.id;
+
+                        // Provjeri postoji li varijabla "vozilo" za trenutni proces
+                        var urlVozilo = `http://localhost:8080/engine-rest/process-instance/${processInstanceId}/variables/vozilo`;
+                        var xhrVozilo = new XMLHttpRequest();
+                        xhrVozilo.onreadystatechange = function() {
+                            if (xhrVozilo.readyState === 4 && xhrVozilo.status === 200) {
+                                var variableVozilo = JSON.parse(xhrVozilo.responseText);
+                                console.log(variableVozilo)
+                                addRowToTable(processInstance, tableBody);
+                            } else if (xhrVozilo.readyState === 4) {
+                                console.error('Error fetching variable "vozilo" for process instance:', xhrVozilo.status);
+                            }
+                        };
+                        xhrVozilo.open('GET', urlVozilo, true);
+                        xhrVozilo.send();
+                    });
+                } else if (xhr.readyState === 4) {
+                    console.error('Error fetching data:', xhr.status);
+                }
+            };
+
+            xhr.open('GET', 'http://localhost:8080/engine-rest/process-instance', true);
+            xhr.send();
+        }
+
+        function addRowToTable(processInstance, tableBody) {
+            // Dohvati varijablu "opisIntervencije" za trenutni proces
+            console.log(processInstance);
+            var urlOpis = `http://localhost:8080/engine-rest/process-instance/${processInstance.id}/variables/opisIntervencije`;
+            var xhrOpis = new XMLHttpRequest();
+            xhrOpis.onreadystatechange = function() {
+                if (xhrOpis.readyState === 4 && xhrOpis.status === 200) {
+                    var variableOpis = JSON.parse(xhrOpis.responseText);
+                    console.log(variableOpis);
+                    // Dodaj red u tablicu s informacijama o procesu i varijabli "opisIntervencije"
+                    var row = document.createElement('tr');
+                    row.innerHTML = `
+                <td>${processInstance.id}</td>
+                <td>${processInstance.startTime}</td>
+                <td>${variableOpis.value}</td>
+                <td>${processInstance.description}</td>
+                <td><button class="btn btn-primary" onclick="addReport(${processInstance.id})">Dodaj izvještaj</button></td>
+            `;
+                    tableBody.appendChild(row);
+                } else if (xhrOpis.readyState === 4) {
+                    console.error('Error fetching variable "opisIntervencije" for process instance:', xhrOpis.status);
+                }
+            };
+            xhrOpis.open('GET', urlOpis, true);
+            xhrOpis.send();
+        }
+
+
+
+        // Funkcija za dohvat zadatka od dispečera
+        function loadDispatcherTasks() {
+            // Implementacija dohvata podataka i generiranje redova tablice
+            // Koristite XMLHttpRequest ili fetch API kako biste dohvatili podatke s backend-a
+            // Dodajte redove u tablicu #table2-body koristeći JavaScript
+        }
+
+        // Učitavanje podataka odmah po učitavanju stranice
+        loadTasksWaitingForReport();
+        loadDispatcherTasks();
+
+        // Možeš postaviti interval za periodično osvježavanje podataka
+        setInterval(function () {
+            loadTasksWaitingForReport();
+            loadDispatcherTasks();
+        }, 60000); // Osvježi svakih 60 sekundi
+    });
+</script>
+
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+</body>
+</html>

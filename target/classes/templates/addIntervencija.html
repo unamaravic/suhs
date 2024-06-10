@@ -4,15 +4,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Unos Intervencije</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
 </head>
 <body>
-<h1>Unos Intervencije</h1>
-<form id="interventionForm">
-    <input type="hidden" id="taskId" th:value="${taskId}">
-    <label for="opisIntervencije">Opis Intervencije:</label>
-    <input type="text" id="opisIntervencije" name="opisIntervencije" required><br><br>
-    <button type="button" onclick="submitForm()">Potvrdi</button>
-</form>
+<div class="container">
+    <h1>Unos Intervencije</h1>
+    <form id="interventionForm">
+        <input type="hidden" id="taskId" th:value="${taskId}">
+        <div class="form-group">
+            <label for="opisIntervencije">Opis Intervencije:</label>
+            <input type="text" class="form-control" id="opisIntervencije" name="opisIntervencije" required>
+        </div>
+        <button type="button" class="btn btn-primary" onclick="submitForm()">Potvrdi</button>
+    </form>
+</div>
 
 <script>
     function submitForm() {
@@ -26,8 +31,7 @@
         xhr.onreadystatechange = function () {
             if (xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200) {
                 console.log(xhr.responseText);
-            }                window.location.href = "/tasks/" + taskId;
-
+            }
         };
         var json = {"variables": {}};
         formData.forEach(function (value, key) {
@@ -35,6 +39,7 @@
         });
         console.log(JSON.stringify(json));
         xhr.send(JSON.stringify(json));
+        window.history.back();
     }
 </script>
 

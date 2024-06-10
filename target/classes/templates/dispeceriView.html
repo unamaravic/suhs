@@ -1,86 +1,284 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <title>Dispeceri View</title>
+    <title>Dispeceri</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 </head>
 <body>
 <div class="container mt-5">
-    <h1 class="mb-4">Dispeceri View</h1>
+    <h1 class="mb-4">SUHS - dispečer</h1>
 
     <!-- Prva tablica -->
-    <h2 class="mb-3">Prva Tablica</h2>
+    <h2 class="mb-3">Adrese</h2>
     <table class="table table-bordered table-hover">
         <thead class="thead-dark">
         <tr>
             <th>PID</th>
             <th>Date/Time</th>
             <th>Adresa</th>
-            <th>Opis</th>
         </tr>
         </thead>
-        <tbody>
+        <tbody id="table1-body">
         <tr th:each="task : ${tasks1}">
-            <td th:text="${task.pid}"></td>
-            <td th:text="${task.dateTime}"></td>
+            <td th:text="${task.processInstanceId}"></td>
+            <td th:text="${task.created}"></td>
             <td>
-                <a th:if="${!task.addressCompleted}" th:href="@{'/completeAddress/' + ${task.pid}}" class="btn btn-primary btn-sm">Unesi adresu</a>
-                <span th:if="${task.addressCompleted}" th:text="${task.address}"></span>
-            </td>
-            <td>
-                <a th:if="${task.addressCompleted && !task.descriptionCompleted}" th:href="@{'/completeDescription/' + ${task.pid}}" class="btn btn-secondary btn-sm" th:disabled="${!task.addressCompleted}">Unesi opis</a>
-                <span th:if="${task.descriptionCompleted}" th:text="${task.description}"></span>
+                <span th:if="${task.name != 'Dodaj adresu korisnika'}">adresa</span>
+                <a th:if="${task.name == 'Dodaj adresu korisnika'}" href="#" class="btn btn-primary btn-sm" th:disabled="${task.name != 'Dodaj adresu korisnika'}">Unesi adresu</a>
+                <a th:if="${task.name == 'Nova intervencija'}" href="/showTask/' + ${task.id} + '" class="btn btn-primary btn-sm">Unesi adresu</a>
             </td>
         </tr>
         </tbody>
     </table>
 
     <!-- Druga tablica -->
-    <h2 class="mb-3">Druga Tablica</h2>
+    <h2 class="mb-3">Intervencije</h2>
     <table class="table table-bordered table-hover">
         <thead class="thead-dark">
         <tr>
             <th>PID</th>
             <th>Date</th>
             <th>Adresa</th>
-            <th>Opis</th>
-            <th>VoziloID</th>
+            <th>Opis intervencije</th>
         </tr>
         </thead>
-        <tbody>
+        <tbody id="table2-body">
         <tr th:each="task : ${tasks2}">
-            <td th:text="${task.pid}"></td>
-            <td th:text="${task.date}"></td>
-            <td th:text="${task.address}"></td>
-            <td th:text="${task.description}"></td>
-            <td th:text="${task.voziloId != null ? task.voziloId : ''}"></td>
+            <td th:text="${task.processInstanceId}"></td>
+            <td th:text="${task.created}"></td>
+            <td th:text="Hardkodirana adresa"></td>
+            <td>
+                <span th:if="${task.name != 'Nova intervencija'}">opis</span>
+                <a th:if="${task.name == 'Nova intervencija'}" href="/showTask/' + ${task.id} + '" class="btn btn-secondary btn-sm">Unesi opis</a>
+            </td>
         </tr>
         </tbody>
     </table>
 
+
     <!-- Treća tablica -->
-    <h2 class="mb-3">Treća Tablica</h2>
+    <h2 class="mb-3">Dodijeli člana hitne službe</h2>
     <table class="table table-bordered table-hover">
         <thead class="thead-dark">
         <tr>
             <th>PID</th>
             <th>Date</th>
+            <th>Opis intervencije</th>
             <th>Izaberi korisnika za popunjavanje izvještaja</th>
         </tr>
         </thead>
-        <tbody>
+        <tbody id="table3-body">
+        <!-- Thymeleaf foreach petlja -->
         <tr th:each="task : ${tasks3}">
-            <td th:text="${task.pid}"></td>
-            <td th:text="${task.date}"></td>
+            <td th:text="${task.processInstanceId}"></td>
+            <td th:text="${task.created}"></td>
+            <td>opis</td>
             <td>
-                <a th:href="@{'/selectUserForReport/' + ${task.pid}}" class="btn btn-primary btn-sm">Izaberi korisnika</a>
+                <div class="form-group">
+                    <select class="form-control" id="userSelect" onchange="assignUser(this.value, ${task.id})">
+                        <option value="">Izaberi korisnika</option>
+                        <!-- Thymeleaf foreach petlja za prikazivanje korisnika -->
+                        <option th:each="user : ${users}" th:value="${user.id}" th:text="${user.username}"></option>
+                    </select>
+                </div>
             </td>
         </tr>
         </tbody>
     </table>
+
+    <div class="container mt-5">
+        <h2 class="mb-3">BPMN Dijagram</h2>
+        <img th:src="@{http://localhost:8080/images/intervencija.png}" alt="model" style="max-width: 100%; height: auto;">
+    </div>
+
 </div>
+<script>
+    function getVariable(taskId, variableName, callback) {
+        var xhr = new XMLHttpRequest();
+        var url = `http://localhost:8080/engine-rest/process-instance/${taskId}/variables/${variableName}`;
+
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState === 4 && xhr.status === 200) {
+                var variable = JSON.parse(xhr.responseText);
+                console.log(variable)
+                callback(variable.value);
+            } else if (xhr.readyState === 4) {
+                console.error(`Error fetching variable ${variableName} for task ${taskId}:`, xhr.status);
+                callback(null);  // Call the callback with null to indicate failure
+            }
+        };
+
+        xhr.open('GET', url, true);
+        xhr.send();
+    }
+
+    function getAdresa(taskId, callback) {
+        var xhr = new XMLHttpRequest();
+        var url = `http://localhost:8080/engine-rest/process-instance/${taskId}/variables`;
+
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState === 4 && xhr.status === 200) {
+                var variables = JSON.parse(xhr.responseText);
+                var value = ''; // Inicijalizacija stringa za spajanje vrijednosti varijabli
+
+                // Iteriraj kroz varijable i dodaj njihove vrijednosti u string
+                for (var key in variables) {
+                    if (variables.hasOwnProperty(key) && (key==='naziv' || key === 'mjesto' || key==='pbr')) {
+                        value += variables[key].value + ' '; // Dodaj vrijednost varijable u string
+                    }
+                }
+
+                callback(value.trim()); // Povrat vrijednosti stringa (uklanjanje početnih i završnih razmaka)
+            } else if (xhr.readyState === 4) {
+                console.error(`Error fetching variable ${variableName} for task ${taskId}:`, xhr.status);
+                callback(null);  // Call the callback with null to indicate failure
+            }
+        };
+
+        xhr.open('GET', url, true);
+        xhr.send();
+    }
+    function assignUser(userId, taskId) {
+        if (userId) {
+            $.ajax({
+                url: `http://localhost:8080/engine-rest/task/${taskId}/assignee`,
+                method: 'POST',
+                data: {userId: userId},
+                success: function (response) {
+                    console.log('Korisnik uspešno dodeljen zadatku.');
+                },
+                error: function (xhr, status, error) {
+                    console.error('Greška prilikom dodeljivanja korisnika zadatku:', error);
+                }
+            });
+        } else {
+            console.error('Molimo odaberite korisnika.');
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        function loadTableData1() {
+            var xhr = new XMLHttpRequest();
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState === 4 && xhr.status === 200) {
+                    var data = JSON.parse(xhr.responseText);
+                    var tableBody = document.getElementById('table1-body');
+                    tableBody.innerHTML = ''; // Očisti sadržaj tablice
+
+                    data.forEach(function (task) {
+                        if (task.name === 'Dodaj adresu korisnika') {
+                            var row = document.createElement('tr');
+                            row.innerHTML = `
+                                <td>${task.processInstanceId}</td>
+                                <td>${task.created}</td>
+                                <td>
+                                    <a href="#" class="btn btn-primary btn-sm" th:disabled="${task.name != 'Dodaj adresu korisnika'}">Unesi adresu</a>
+                                </td>
+                            `;
+                            tableBody.appendChild(row);
+                        }
+                    });
+                } else if (xhr.readyState === 4) {
+                    console.error('Error fetching data:', xhr.status);
+                }
+            };
+
+            xhr.open('GET', 'http://localhost:8080/engine-rest/task?processDefintionKey=IntervencijaHS', true);
+            xhr.send();
+        }
+
+        function loadTableData2() {
+            var xhr = new XMLHttpRequest();
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState === 4 && xhr.status === 200) {
+                    var data = JSON.parse(xhr.responseText);
+                    var tableBody = document.getElementById('table2-body');
+                    tableBody.innerHTML = ''; // Očisti sadržaj tablice
+
+                    data.forEach(function (task) {
+                        if (task.name === 'Nova intervencija') {
+                            var row = document.createElement('tr');
+                            row.innerHTML = `
+                                <td>${task.processInstanceId}</td>
+                                <td>${task.created}</td>
+                                <td><span id="address-${task.processInstanceId}">Loading...</span></td>
+                                <td>
+                                    <a href="/showTask/${task.id}" class="btn btn-secondary btn-sm">Unesi opis</a>
+                                </td>
+                            `;
+                            tableBody.appendChild(row);
+
+                            getAdresa(task.processInstanceId, function(value) {
+                                document.getElementById(`address-${task.processInstanceId}`).textContent = value || 'N/A';
+                            });
+
+                        }
+                    });
+                } else if (xhr.readyState === 4) {
+                    console.error('Error fetching data:', xhr.status);
+                }
+            };
+
+            xhr.open('GET', 'http://localhost:8080/engine-rest/task?processDefintionKey=IntervencijaHS', true);
+            xhr.send();
+        }
+
+        function loadTableData3() {
+            var xhr = new XMLHttpRequest();
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState === 4 && xhr.status === 200) {
+                    var data = JSON.parse(xhr.responseText);
+                    var tableBody = document.getElementById('table3-body');
+                    tableBody.innerHTML = ''; // Očisti sadržaj tablice
+
+                    data.forEach(function (task) {
+                        if (task.name === 'Odaberi clana koji ce popunit izvjesce') {
+                            var row = document.createElement('tr');
+                            row.innerHTML = `
+                                <td>${task.processInstanceId}</td>
+                                <td>${task.created}</td>
+                                <td><span id="opis-${task.processInstanceId}">Loading...</span></td>
+                                <td>
+                                    <a href="/showTask/${task.id}" class="btn btn-primary btn-sm">Odaberi korisnika</a>
+                                </td>
+                            `;
+                            tableBody.appendChild(row);
+                            getVariable(task.processInstanceId, 'opisIntervencije', function(value) {
+                                document.getElementById(`opis-${task.processInstanceId}`).textContent = value || 'N/A';
+                            });
+                        }
+                    });
+                } else if (xhr.readyState === 4) {
+                    console.error('Error fetching data:', xhr.status);
+                }
+            };
+
+            xhr.open('GET', 'http://localhost:8080/engine-rest/task?processDefintionKey=IntervencijaHS', true);
+            xhr.send();
+        }
+
+        // Učitaj podatke odmah po učitavanju stranice
+        loadTableData1();
+        loadTableData2();
+        loadTableData3();
+
+        // Možeš postaviti interval za periodično osvježavanje podataka
+        setInterval(function () {
+            loadTableData1();
+            loadTableData2();
+            loadTableData3();
+        }, 60000); // Osvježi svakih 60 sekundi
+    });
+
+
+</script>
+
+
 <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
 </body>
 </html>
+
+

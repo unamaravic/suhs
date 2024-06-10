@@ -27,7 +27,7 @@ public class ProcessController {
 
     @GetMapping("/app/{username}")
     public String index(@PathVariable("username") String username, Model model) {
-
+        model.addAttribute("user", username);
         String url = "http://localhost:8080/engine-rest/identity/groups?userId=" + username;
         RestTemplate restTemplate = new RestTemplate();
         Map response = restTemplate.getForObject(url, Map.class);
@@ -82,6 +82,10 @@ public class ProcessController {
 
             case "Nova intervencija":
                 templateName = "addIntervencija";
+                break;
+
+            case "Odaberi clana koji ce popunit izvjesce":
+                templateName = "selectClan";
                 break;
 
             default:

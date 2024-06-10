@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Padajući izbornik sa korisnicima</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+</head>
+<body>
+<div class="container mt-5">
+    <h1 class="mb-4">Padajući izbornik sa korisnicima</h1>
+    <form id="assignTaskForm">
+        <div class="form-group">
+            <label for="usersSelect">Izaberi korisnika:</label>
+            <select class="form-control" id="usersSelect">
+                <option value="">Odaberi korisnika</option>
+            </select>
+        </div>
+        <button type="submit" class="btn btn-primary">Dodijeli zadatak</button>
+    </form>
+</div>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        function loadUsers() {
+            var xhr = new XMLHttpRequest();
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState === 4) {
+                    if (xhr.status === 200) {
+                        var usersSelect = document.getElementById('usersSelect');
+                        var response = JSON.parse(xhr.responseText);
+                        usersSelect.innerHTML = '<option value="">Odaberi korisnika</option>';
+                        response.forEach(function(user) {
+                            var option = document.createElement('option');
+                            option.value = user.id;
+                            option.textContent = user.id;
+                            usersSelect.appendChild(option);
+                        });
+                    } else {
+                        console.error('Greška prilikom dohvaćanja korisnika:', xhr.status);
+                    }
+                }
+            };
+            xhr.open('GET', 'http://localhost:8080/engine-rest/user?memberOfGroup=ClanoviHS', true);
+            xhr.send();
+        }
+
+        loadUsers();
+
+        document.getElementById('assignTaskForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            var userId = document.getElementById('usersSelect').value;
+            if (userId) {
+                var xhr = new XMLHttpRequest();
+                xhr.onreadystatechange = function() {
+                    if (xhr.readyState === 4) {
+                        if (xhr.status === 200) {
+                            console.log('Zadatak uspješno dodijeljen korisniku.');
+                            window.history.back();
+                        } else {
+                            console.error('Greška prilikom dodjele zadatka:', xhr.status);
+                        }
+                    }
+                };
+                xhr.open('POST', 'http://localhost:8080/engine-rest/task/Activity_0ug3w1z/assignee', true);
+                xhr.setRequestHeader('Content-Type', 'application/json');
+                var payload = JSON.stringify({ userId: userId });
+                xhr.send(payload);
+            } else {
+                console.error('Molimo odaberite korisnika.');
+            }
+        });
+    });
+</script>
+</body>
+</html>

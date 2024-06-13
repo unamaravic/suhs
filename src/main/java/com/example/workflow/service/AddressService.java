@@ -8,6 +8,8 @@ import org.springframework.stereotype.Service;
 import javax.annotation.PostConstruct;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -17,8 +19,10 @@ public class AddressService {
 
     @PostConstruct
     public void init() {
+        Path p = Paths.get("./src/main/resources/MjestaRH.pdf").normalize().toAbsolutePath();
+        System.out.println(p);
         try {
-            PDDocument document = Loader.loadPDF(new File("C:/una/fer/piis/infsus/dz4/MjestaRH.pdf"));
+            PDDocument document = Loader.loadPDF(new File(String.valueOf(p)));
             PDFTextStripper pdfStripper = new PDFTextStripper();
             String text = pdfStripper.getText(document);
             document.close();

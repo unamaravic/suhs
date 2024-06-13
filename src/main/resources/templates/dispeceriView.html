@@ -8,6 +8,8 @@
 <body>
 <div class="container mt-5">
     <h1 class="mb-4">SUHS - dispečer</h1>
+    <a class="btn btn-primary" th:href="@{${user} + '/start'}" role="button">Pokreni novi proces</a>
+    <input type="hidden" id="username" th:value="${user}">
 
     <!-- Prva tablica -->
     <h2 class="mb-3">Adrese</h2>
@@ -25,7 +27,7 @@
             <td th:text="${task.created}"></td>
             <td>
                 <span th:if="${task.name != 'Dodaj adresu korisnika'}">adresa</span>
-                <a th:if="${task.name == 'Dodaj adresu korisnika'}" href="#" class="btn btn-primary btn-sm" th:disabled="${task.name != 'Dodaj adresu korisnika'}">Unesi adresu</a>
+                <a th:if="${task.name == 'Dodaj adresu korisnika'}" href="/showTask/' + ${task.id} + '" class="btn btn-primary btn-sm" th:disabled="${task.name != 'Dodaj adresu korisnika'}">Unesi adresu</a>
                 <a th:if="${task.name == 'Nova intervencija'}" href="/showTask/' + ${task.id} + '" class="btn btn-primary btn-sm">Unesi adresu</a>
             </td>
         </tr>
@@ -159,6 +161,7 @@
 
     document.addEventListener('DOMContentLoaded', function () {
         function loadTableData1() {
+            var username = document.getElementById("username").value;
             var xhr = new XMLHttpRequest();
             xhr.onreadystatechange = function () {
                 if (xhr.readyState === 4 && xhr.status === 200) {
@@ -173,7 +176,7 @@
                                 <td>${task.processInstanceId}</td>
                                 <td>${task.created}</td>
                                 <td>
-                                    <a href="#" class="btn btn-primary btn-sm" th:disabled="${task.name != 'Dodaj adresu korisnika'}">Unesi adresu</a>
+                                    <a href="${username}/showTask/${task.id}" class="btn btn-primary btn-sm" th:disabled="${task.name != 'Dodaj adresu korisnika'}">Unesi adresu</a>
                                 </td>
                             `;
                             tableBody.appendChild(row);

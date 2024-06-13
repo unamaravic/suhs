@@ -11,6 +11,7 @@
     <h1>Unos Adrese</h1>
     <form id="addressForm">
         <input type="hidden" id="taskId" th:value="${taskId}">
+        <input type="hidden" id="username" th:value="${user}">
 
         <div class="form-group">
             <label for="naziv">Naziv:</label>
@@ -37,6 +38,7 @@
         var formData = new FormData(form);
         var xhr = new XMLHttpRequest();
         var taskId = document.getElementById("taskId").value;
+        var username = document.getElementById("username").value;
         xhr.open("POST", "http://localhost:8080/engine-rest/task/" + taskId + "/complete", true);
 
         xhr.setRequestHeader("Content-Type", "application/json");
@@ -51,7 +53,7 @@
         });
         console.log(JSON.stringify((json)));
         xhr.send(JSON.stringify(json));
-        window.history.back();
+        window.location.href= "http://localhost:8080/app/"+username;
     }
 </script>
 

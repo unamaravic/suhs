@@ -64,7 +64,7 @@
                         var processInstanceId = processInstance.id;
 
                         // Provjeri postoji li varijabla "vozilo" za trenutni proces
-                        var urlVozilo = `http://localhost:8080/engine-rest/process-instance/${processInstanceId}/variables/vozilo`;
+                        var urlVozilo = `http://localhost:8080/engine-rest/process-instance/${processInstanceId}`;
                         var xhrVozilo = new XMLHttpRequest();
                         xhrVozilo.onreadystatechange = function() {
                             if (xhrVozilo.readyState === 4 && xhrVozilo.status === 200) {

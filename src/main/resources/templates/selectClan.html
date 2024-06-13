@@ -9,6 +9,7 @@
     <h1 class="mb-4">Padajući izbornik sa korisnicima</h1>
     <form id="assignTaskForm">
         <div class="form-group">
+            <input type="hidden" id="taskId" th:value="${taskId}">
             <label for="usersSelect">Izaberi korisnika:</label>
             <select class="form-control" id="usersSelect">
                 <option value="">Odaberi korisnika</option>
@@ -46,6 +47,7 @@
 
         document.getElementById('assignTaskForm').addEventListener('submit', function(event) {
             event.preventDefault();
+            var taskId = document.getElementById("taskId").value;
             var userId = document.getElementById('usersSelect').value;
             if (userId) {
                 var xhr = new XMLHttpRequest();
@@ -59,7 +61,7 @@
                         }
                     }
                 };
-                xhr.open('POST', 'http://localhost:8080/engine-rest/task/Activity_0ug3w1z/assignee', true);
+                xhr.open('POST', `http://localhost:8080/engine-rest/task/${taskId}/assignee`, true);
                 xhr.setRequestHeader('Content-Type', 'application/json');
                 var payload = JSON.stringify({ userId: userId });
                 xhr.send(payload);

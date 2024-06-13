@@ -11,10 +11,10 @@ import org.camunda.bpm.engine.task.Task;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
+
+import javax.naming.ldap.Control;
 
 @Controller
 public class ProcessController {
@@ -54,22 +54,26 @@ public class ProcessController {
     }
 
 
-    @PostMapping("/start")
-    public String startProcess(Model model) {
+    @GetMapping("/app/{username}/start")
+    public String startProcess(@PathVariable("username") String username, Model model) {
+        model.addAttribute("user", username);
         ProcessInstance processInstance = runtimeService.startProcessInstanceByKey("Process_16ctghp");
         model.addAttribute("processInstanceId", processInstance.getId());
-        return "redirect:/tasks/" + processInstance.getId();
+        return "redirect:/app/" + username;
     }
 
-    @GetMapping("/tasks/{processInstanceId}")
-    public String getTasks(@PathVariable("processInstanceId") String processInstanceId, Model model) {
+    @GetMapping("/app/{username}/tasks/{processInstanceId}")
+    public String getTasks(@PathVariable("processInstanceId") String processInstanceId,
+                           @PathVariable("user") String username, Model model) {
+        model.addAttribute("username", username);
         List<Task> tasks = taskService.createTaskQuery().processInstanceId(processInstanceId).list();
         model.addAttribute("tasks", tasks);
         return "tasks";
     }
 
-    @GetMapping("/showTask/{taskId}")
-    public String showTask(@PathVariable("taskId") String taskId, Model model) {
+    @GetMapping("/app/{username}/showTask/{taskId}")
+    public String showTask(@PathVariable("taskId") String taskId, @PathVariable("username") String username, Model model) {
+        model.addAttribute("user", username);
         String templateName;
         Task task = taskService.createTaskQuery().taskId(taskId).singleResult();
         model.addAttribute("taskId", taskId);

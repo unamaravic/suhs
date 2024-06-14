@@ -92,6 +92,10 @@ public class ProcessController {
                 templateName = "selectClan";
                 break;
 
+            case "Popuni izvjestaj":
+                templateName = "addIzvjestaj";
+                break;
+
             default:
                 templateName = "defaultTemplate";
                 break;

@@ -11,6 +11,7 @@
 
     <!-- Tablica s intervencijama koje čekaju izvještaj -->
     <h2 class="mb-3">Intervencije koje čekaju izvještaj</h2>
+    <input type="hidden" id="username" th:value="${user}">
     <table class="table table-bordered table-hover">
         <thead class="thead-dark">
         <tr>
@@ -26,8 +27,7 @@
         </tbody>
     </table>
 
-    <!-- Tablica s zadacima od dispečera -->
-    <h2 class="mb-3">Zadaci od dispečera</h2>
+    <h2 class="mb-3">Izvještaji koje trebate ispuniti</h2>
     <table class="table table-bordered table-hover">
         <thead class="thead-dark">
         <tr>
@@ -58,80 +58,145 @@
                 if (xhr.readyState === 4 && xhr.status === 200) {
                     var processInstances = JSON.parse(xhr.responseText);
                     var tableBody = document.getElementById('table1-body');
-                    tableBody.innerHTML = ''; // Očisti sadržaj tablice
-
+                    tableBody.innerHTML = '';
+                    console.log(processInstances)
                     processInstances.forEach(function (processInstance) {
-                        var processInstanceId = processInstance.id;
-
-                        // Provjeri postoji li varijabla "vozilo" za trenutni proces
-                        var urlVozilo = `http://localhost:8080/engine-rest/process-instance/${processInstanceId}`;
-                        var xhrVozilo = new XMLHttpRequest();
-                        xhrVozilo.onreadystatechange = function() {
-                            if (xhrVozilo.readyState === 4 && xhrVozilo.status === 200) {
-                                var variableVozilo = JSON.parse(xhrVozilo.responseText);
-                                console.log(variableVozilo)
-                                addRowToTable(processInstance, tableBody);
-                            } else if (xhrVozilo.readyState === 4) {
-                                console.error('Error fetching variable "vozilo" for process instance:', xhrVozilo.status);
-                            }
-                        };
-                        xhrVozilo.open('GET', urlVozilo, true);
-                        xhrVozilo.send();
+                        addRowToTable(processInstance, tableBody);
                     });
                 } else if (xhr.readyState === 4) {
                     console.error('Error fetching data:', xhr.status);
                 }
             };
 
-            xhr.open('GET', 'http://localhost:8080/engine-rest/process-instance', true);
+            xhr.open('GET', 'http://localhost:8080/engine-rest/event-subscription?eventName=ClanSeJavio', true);
+            xhr.send();
+        }
+
+        function loadTasks() {
+            var username = document.getElementById("username").value;
+            var xhr = new XMLHttpRequest();
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState === 4 && xhr.status === 200) {
+                    var data = JSON.parse(xhr.responseText);
+                    var tableBody = document.getElementById('table2-body');
+                    tableBody.innerHTML = ''; // Očisti sadržaj tablice
+                    console.log(data);
+                    data.forEach(function (task) {
+                        console.log(task);
+                        if (task.name === 'Popuni izvjestaj') {
+                            getVariable(task.processInstanceId, 'userIzvjestaj', function(value) {
+                                if (value === username) {
+                                    var row = document.createElement('tr');
+                                    row.innerHTML = `
+                                <td>${task.processInstanceId}</td>
+                                <td>${task.created}</td>
+                                <td><span id="opis-${task.processInstanceId}">Loading...</span></td>
+                                <td><span id="vozilo-${task.processInstanceId}">Loading...</span></td>
+                                <td>
+                                    <a href="${username}/showTask/${task.id}" class="btn btn-primary btn-sm">Ispuni izvjestaj</a>
+                                </td>
+                            `;
+                                    tableBody.appendChild(row);
+                                    console.log("tu sam");
+                                    getVariable(task.processInstanceId, 'opisIntervencije', function(value) {
+                                        document.getElementById(`opis-${task.processInstanceId}`).textContent = value || 'N/A';
+                                    });
+                                    getVariable(task.processInstanceId, 'vozilo', function(value) {
+                                        document.getElementById(`vozilo-${task.processInstanceId}`).textContent = value || 'N/A';
+                                    });
+                                }
+                            });
+                        }
+                    });
+                } else if (xhr.readyState === 4) {
+                    console.error('Error fetching data:', xhr.status);
+                }
+            };
+
+            xhr.open('GET', 'http://localhost:8080/engine-rest/task?name=Popuni%20Izvjestaj', true);
+            xhr.send();
+        }
+
+        function getVariable(taskId, variableName, callback) {
+            var xhr = new XMLHttpRequest();
+            var url = `http://localhost:8080/engine-rest/process-instance/${taskId}/variables/${variableName}`;
+            console.log(variableName);
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState === 4 && xhr.status === 200) {
+                    var variable = JSON.parse(xhr.responseText);
+                    console.log(variable)
+                    callback(variable.value);
+                } else if (xhr.readyState === 4) {
+                    console.error(`Error fetching variable ${variableName} for task ${taskId}:`, xhr.status);
+                    callback(null);  // Call the callback with null to indicate failure
+                }
+            };
+
+            xhr.open('GET', url, true);
             xhr.send();
         }
 
         function addRowToTable(processInstance, tableBody) {
-            // Dohvati varijablu "opisIntervencije" za trenutni proces
+            // Hardkodirani redovi za "opisIntervencije" i "vozilo"
+            var hardcodedOpisIntervencije = 'Primjer opisa intervencije';
+            var hardcodedVozilo = 'Primjer vozila';
+
+            // Dodaj red u tablicu s informacijama o procesu i hardkodiranim varijablama
             console.log(processInstance);
-            var urlOpis = `http://localhost:8080/engine-rest/process-instance/${processInstance.id}/variables/opisIntervencije`;
-            var xhrOpis = new XMLHttpRequest();
-            xhrOpis.onreadystatechange = function() {
-                if (xhrOpis.readyState === 4 && xhrOpis.status === 200) {
-                    var variableOpis = JSON.parse(xhrOpis.responseText);
-                    console.log(variableOpis);
-                    // Dodaj red u tablicu s informacijama o procesu i varijabli "opisIntervencije"
-                    var row = document.createElement('tr');
-                    row.innerHTML = `
-                <td>${processInstance.id}</td>
-                <td>${processInstance.startTime}</td>
-                <td>${variableOpis.value}</td>
-                <td>${processInstance.description}</td>
-                <td><button class="btn btn-primary" onclick="addReport(${processInstance.id})">Dodaj izvještaj</button></td>
-            `;
-                    tableBody.appendChild(row);
-                } else if (xhrOpis.readyState === 4) {
-                    console.error('Error fetching variable "opisIntervencije" for process instance:', xhrOpis.status);
+            var row = document.createElement('tr');
+            row.innerHTML = `
+            <td>${processInstance.processInstanceId}</td>
+            <td>${new Date(processInstance.createdDate).toLocaleString()}</td>
+            <td><span id="opis2-${processInstance.processInstanceId}">Loading...</span></td>
+            <td><span id="vozilo2-${processInstance.processInstanceId}">Loading...</span></td>
+            <td><button class="btn btn-primary" onclick="sendMessage('${processInstance.processInstanceId}')">Preuzmi ispunjavanje izvještaja</button></td>
+        `;
+            tableBody.appendChild(row);
+            getVariable(processInstance.processInstanceId, 'opisIntervencije', function(value) {
+                document.getElementById(`opis2-${processInstance.processInstanceId}`).textContent = value || 'N/A';
+            });
+            getVariable(processInstance.processInstanceId, 'vozilo', function(value) {
+                document.getElementById(`vozilo2-${processInstance.processInstanceId}`).textContent = value || 'N/A';
+            });
+        }
+
+        window.sendMessage = function(processId) {
+            var username = document.getElementById("username").value;
+            var xhr = new XMLHttpRequest();
+            console.log(processId);
+            console.log(username);
+            var url = 'http://localhost:8080/engine-rest/process-instance/message-async';
+            var payload = {
+                "messageName": "ClanSeJavio",
+                "processInstanceIds": [processId],
+                "variables": {
+                    "userIzvjestaj": {
+                        "value": username
+                    }
                 }
             };
-            xhrOpis.open('GET', urlOpis, true);
-            xhrOpis.send();
+
+            payload = JSON.stringify(payload);
+
+            xhr.open('POST', url, true);
+            xhr.setRequestHeader('Content-Type', 'application/json');
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState === 4 && xhr.status === 204) {
+                    console.log('Poruka poslana za proces s ID: ' + processId);
+                } else if (xhr.readyState === 4) {
+                    console.error('Greška prilikom slanja poruke:', xhr.status, xhr.statusText);
+                }
+            };
+            xhr.send(payload);
         }
 
-
-
-        // Funkcija za dohvat zadatka od dispečera
-        function loadDispatcherTasks() {
-            // Implementacija dohvata podataka i generiranje redova tablice
-            // Koristite XMLHttpRequest ili fetch API kako biste dohvatili podatke s backend-a
-            // Dodajte redove u tablicu #table2-body koristeći JavaScript
-        }
-
-        // Učitavanje podataka odmah po učitavanju stranice
         loadTasksWaitingForReport();
-        loadDispatcherTasks();
+        loadTasks();
 
-        // Možeš postaviti interval za periodično osvježavanje podataka
         setInterval(function () {
             loadTasksWaitingForReport();
-            loadDispatcherTasks();
-        }, 60000); // Osvježi svakih 60 sekundi
+            loadTasks();
+        }, 60000);
     });
 </script>
 

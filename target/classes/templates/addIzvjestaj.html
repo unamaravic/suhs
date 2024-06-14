@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unos Intervencije</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+<div class="container">
+    <h1>Unos izvještaja</h1>
+    <form id="interventionForm">
+        <input type="hidden" id="taskId" th:value="${taskId}">
+        <div class="form-group">
+            <label for="opisIntervencije">Opis:</label>
+            <input type="text" class="form-control" id="opisIntervencije" name="opisIntervencije" required>
+        </div>
+        <button type="button" class="btn btn-primary" onclick="submitForm()">Potvrdi</button>
+    </form>
+</div>
+
+<script>
+    function submitForm() {
+        var form = document.getElementById("interventionForm");
+        var formData = new FormData(form);
+        var xhr = new XMLHttpRequest();
+        var taskId = document.getElementById("taskId").value;
+        xhr.open("POST", "http://localhost:8080/engine-rest/task/" + taskId + "/complete", true);
+
+        xhr.setRequestHeader("Content-Type", "application/json");
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200) {
+                console.log(xhr.responseText);
+            }
+        };
+        var json = {"variables": {}};
+        formData.forEach(function (value, key) {
+            json["variables"][key] = {"value": value};
+        });
+        console.log(JSON.stringify(json));
+        xhr.send(JSON.stringify(json));
+        window.history.back();
+    }
+</script>
+
+</body>
+</html>

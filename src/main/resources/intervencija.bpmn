@@ -96,7 +96,8 @@
     </bpmn:manualTask>
     <bpmn:sequenceFlow id="Flow_122qgzr" sourceRef="Activity_1vl1sdj" targetRef="Activity_061v26f" />
     <bpmn:sequenceFlow id="Flow_18mpnd4" sourceRef="Activity_061v26f" targetRef="Gateway_16s8po2" />
-    <bpmn:eventBasedGateway id="Gateway_16s8po2">
+    <bpmn:eventBasedGateway id="Gateway_16s8po2" name="Cekaj prihvacanje">
+      <bpmn:extensionElements />
       <bpmn:incoming>Flow_18mpnd4</bpmn:incoming>
       <bpmn:outgoing>Flow_16c7ti8</bpmn:outgoing>
       <bpmn:outgoing>Flow_0srng9l</bpmn:outgoing>
@@ -117,17 +118,21 @@
       </bpmn:timerEventDefinition>
     </bpmn:intermediateCatchEvent>
     <bpmn:sequenceFlow id="Flow_1youz3k" sourceRef="Event_0kdbuvd" targetRef="Activity_0heo5wr" />
-    <bpmn:sequenceFlow id="Flow_00zg57y" sourceRef="Activity_0heo5wr" targetRef="Activity_0ug3w1z" />
-    <bpmn:userTask id="Activity_0heo5wr" name="Odaberi clana koji ce popunit izvjesce" camunda:candidateGroups="Dispeceri">
+    <bpmn:sequenceFlow id="Flow_00zg57y" sourceRef="Activity_0heo5wr" targetRef="Activity_0ug3w1z">
+      <bpmn:extensionElements />
+    </bpmn:sequenceFlow>
+    <bpmn:userTask id="Activity_0heo5wr" name="Odaberi clana koji ce popunit izvjestaj" camunda:candidateGroups="Dispeceri">
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="userIzvjestaj" label="userIzvjestaj" type="string" />
+        </camunda:formData>
+      </bpmn:extensionElements>
       <bpmn:incoming>Flow_1youz3k</bpmn:incoming>
       <bpmn:outgoing>Flow_00zg57y</bpmn:outgoing>
     </bpmn:userTask>
     <bpmn:userTask id="Activity_0ug3w1z" name="Popuni izvjestaj">
       <bpmn:extensionElements>
-        <camunda:formData>
-          <camunda:formField id="tekstIzvjestaja" label="tekstIzvjestaja" type="string" />
-          <camunda:formField id="datum" label="datum" type="date" />
-        </camunda:formData>
+        <camunda:executionListener class="com.example.workflow.delegate.IzvjestajAssignee" event="start" />
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_0ugj9wm</bpmn:incoming>
       <bpmn:incoming>Flow_00zg57y</bpmn:incoming>
@@ -199,6 +204,9 @@
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Gateway_1xat4jq_di" bpmnElement="Gateway_16s8po2">
         <dc:Bounds x="1255" y="395" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1296" y="383" width="88" height="14" />
+        </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Event_13t8cfd_di" bpmnElement="Event_13t8cfd">
         <dc:Bounds x="1262" y="582" width="36" height="36" />
@@ -214,9 +222,11 @@
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Activity_15dq8ju_di" bpmnElement="Activity_0heo5wr">
         <dc:Bounds x="1350" y="170" width="100" height="80" />
+        <bpmndi:BPMNLabel />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Activity_0iu0fo8_di" bpmnElement="Activity_0ug3w1z">
         <dc:Bounds x="1350" y="560" width="100" height="80" />
+        <bpmndi:BPMNLabel />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Activity_0qj893k_di" bpmnElement="Activity_061v26f">
         <dc:Bounds x="1100" y="380" width="100" height="80" />

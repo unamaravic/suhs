@@ -52,7 +52,7 @@
             <td th:text="Hardkodirana adresa"></td>
             <td>
                 <span th:if="${task.name != 'Nova intervencija'}">opis</span>
-                <a th:if="${task.name == 'Nova intervencija'}" href="/showTask/' + ${task.id} + '" class="btn btn-secondary btn-sm">Unesi opis</a>
+                <a th:if="${task.name == 'Nova intervencija'}" th:href="@{${user} + '/showTask/' + ${task.id}}" class="btn btn-secondary btn-sm">Unesi opis</a>
             </td>
         </tr>
         </tbody>
@@ -192,12 +192,13 @@
         }
 
         function loadTableData2() {
+            var username = document.getElementById("username").value;
             var xhr = new XMLHttpRequest();
             xhr.onreadystatechange = function () {
                 if (xhr.readyState === 4 && xhr.status === 200) {
                     var data = JSON.parse(xhr.responseText);
                     var tableBody = document.getElementById('table2-body');
-                    tableBody.innerHTML = ''; // Očisti sadržaj tablice
+                    tableBody.innerHTML = '';
 
                     data.forEach(function (task) {
                         if (task.name === 'Nova intervencija') {
@@ -207,7 +208,7 @@
                                 <td>${task.created}</td>
                                 <td><span id="address-${task.processInstanceId}">Loading...</span></td>
                                 <td>
-                                    <a href="/showTask/${task.id}" class="btn btn-secondary btn-sm">Unesi opis</a>
+                                    <a href="${username}/showTask/${task.id}" class="btn btn-secondary btn-sm">Unesi opis</a>
                                 </td>
                             `;
                             tableBody.appendChild(row);
@@ -228,6 +229,7 @@
         }
 
         function loadTableData3() {
+            var username = document.getElementById("username").value;
             var xhr = new XMLHttpRequest();
             xhr.onreadystatechange = function () {
                 if (xhr.readyState === 4 && xhr.status === 200) {
@@ -243,7 +245,7 @@
                                 <td>${task.created}</td>
                                 <td><span id="opis-${task.processInstanceId}">Loading...</span></td>
                                 <td>
-                                    <a href="/showTask/${task.id}" class="btn btn-primary btn-sm">Odaberi korisnika</a>
+                                    <a href="${username}/showTask/${task.id}" class="btn btn-primary btn-sm">Odaberi korisnika</a>
                                 </td>
                             `;
                             tableBody.appendChild(row);
@@ -257,7 +259,7 @@
                 }
             };
 
-            xhr.open('GET', 'http://localhost:8080/engine-rest/task?processDefintionKey=IntervencijaHS', true);
+            xhr.open('GET', 'http://localhost:8080/engine-rest/task?name=Odaberi%20clana%20koji%20ce%20popunit%20izvjesce', true); //PROMIJENI U IZVJESTAJ
             xhr.send();
         }
 
